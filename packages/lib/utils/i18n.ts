@@ -21,7 +21,23 @@ export async function dynamicActivate(locale: string) {
 }
 
 const parseLanguageFromLocale = (locale: string): SupportedLanguageCodes | null => {
-  const [language, _country] = locale.split('-');
+  // Drop quality values such as `zh-TW;q=0.9`.
+  const tag = locale.split(';')[0].trim();
+
+  // Traditional Chinese: Taiwan, Hong Kong, Macau, or an explicit Hant script.
+  if (/^zh-(tw|hk|mo|hant)\b/i.test(tag)) {
+    return 'zh-TW';
+  }
+
+  const exactMatch = APP_I18N_OPTIONS.supportedLangs.find(
+    (lang): lang is SupportedLanguageCodes => lang.toLowerCase() === tag.toLowerCase(),
+  );
+
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  const [language, _country] = tag.split('-');
 
   const foundSupportedLanguage = APP_I18N_OPTIONS.supportedLangs.find(
     (lang): lang is SupportedLanguageCodes => lang === language,
