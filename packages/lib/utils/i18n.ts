@@ -98,6 +98,31 @@ export const extractLocaleData = ({ headers }: ExtractLocaleDataOptions): I18nLo
   };
 };
 
+/**
+ * Resolve the language for a request from the `lang` cookie, falling back to
+ * the `accept-language` header.
+ *
+ * The cookie is written on every page load, so browsers that visited before
+ * zh-TW existed are pinned to `zh` (Simplified). When the header asks for
+ * Traditional Chinese, prefer it over a `zh` cookie.
+ */
+export const resolveRequestLanguage = (
+  cookieLang: unknown,
+  headers: Headers,
+): SupportedLanguageCodes => {
+  const headerLang = extractLocaleData({ headers }).lang;
+
+  if (!APP_I18N_OPTIONS.supportedLangs.includes(cookieLang as SupportedLanguageCodes)) {
+    return headerLang;
+  }
+
+  if (cookieLang === 'zh' && headerLang === 'zh-TW') {
+    return headerLang;
+  }
+
+  return cookieLang as SupportedLanguageCodes;
+};
+
 export const parseMessageDescriptor = (_: I18n['_'], value: string | MessageDescriptor) => {
   return typeof value === 'string' ? value : _(value);
 };

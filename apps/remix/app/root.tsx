@@ -2,9 +2,9 @@ import { getOptionalSession } from '@documenso/auth/server/lib/utils/get-session
 import { useAnalytics } from '@documenso/lib/client-only/hooks/use-analytics';
 import { SessionProvider } from '@documenso/lib/client-only/providers/session';
 import { getBasePath } from '@documenso/lib/constants/app';
-import { APP_I18N_OPTIONS, type SupportedLanguageCodes } from '@documenso/lib/constants/i18n';
+import type { SupportedLanguageCodes } from '@documenso/lib/constants/i18n';
 import { createPublicEnv } from '@documenso/lib/utils/env';
-import { extractLocaleData } from '@documenso/lib/utils/i18n';
+import { resolveRequestLanguage } from '@documenso/lib/utils/i18n';
 import { TrpcProvider } from '@documenso/trpc/react';
 import { getOrganisationSession } from '@documenso/trpc/server/organisation-router/get-organisation-session';
 import { Toaster } from '@documenso/ui/primitives/toaster';
@@ -54,11 +54,10 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
   const cookieHeader = request.headers.get('cookie') ?? '';
 
-  let lang: SupportedLanguageCodes = await langCookie.parse(cookieHeader);
-
-  if (!APP_I18N_OPTIONS.supportedLangs.includes(lang)) {
-    lang = extractLocaleData({ headers: request.headers }).lang;
-  }
+  const lang: SupportedLanguageCodes = resolveRequestLanguage(
+    await langCookie.parse(cookieHeader),
+    request.headers,
+  );
 
   const disableAnimations = cookieHeader.includes('__disable_animations=true');
 
